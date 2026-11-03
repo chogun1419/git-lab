@@ -1,0 +1,33 @@
+PS D:\git-lab-ee> git status
+>> git log --oneline --graph --decorate --all
+>> git remote -v
+>> git status -sb
+>> python -m unittest -v
+On branch main
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        git-evidence.txt
+        github-repo-url.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+  * 9d7d16a (HEAD -> main) add readme and electrical code
+* 1751b58 Agent host session dd248db2-a5c0-4c89-bb91-4dbd53c27a2d - turn 2
+* 1a0493f Agent host session dd248db2-a5c0-4c89-bb91-4dbd53c27a2d - turn 2 start
+* 4df293d Agent host session dd248db2-a5c0-4c89-bb91-4dbd53c27a2d - turn 1
+* fce1829 Agent host session dd248db2-a5c0-4c89-bb91-4dbd53c27a2d - turn 1 start
+ \ 
+  * 4d09408 Agent host session dd248db2-a5c0-4c89-bb91-4dbd53c27a2d - baseline checkpoint
+* 0a204f6 (origin/main) Initial commit
+origin  https://github.com/chogun1419/git-lab.git (fetch)
+origin  https://github.com/chogun1419/git-lab.git (push)
+## main
+?? git-evidence.txt
+?? github-repo-url.txt
+test_known_values (test_electrical.TestDCAnalyzer.test_known_values) ... ok
+test_zero_voltage (test_electrical.TestDCAnalyzer.test_zero_voltage) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+OK
+PS D:\git-lab-ee> 
