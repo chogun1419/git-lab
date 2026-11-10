@@ -111,10 +111,32 @@ templates/index.html + static/style.css
 - ใช้ `unittest` จาก standard library ไม่เพิ่ม dependency นอกจาก Flask
 - ใช้ `create_app()` factory เพื่อให้ test สร้างแอปแยกได้
 - ข้อความบนหน้าจอเป็นภาษาไทย สัญลักษณ์ทางไฟฟ้าเป็นภาษาอังกฤษ
-- เลือกค่าเริ่มต้น V<sub>CC</sub>=12 V, R<sub>1</sub>=47k, R<sub>2</sub>=10k,
-  R<sub>C</sub>=4.7k, R<sub>E</sub>=1k, β=150 เป็นตัวอย่างที่ให้ Q-point อยู่ในช่วง Active
+- เลือกค่าเริ่มต้น V<sub>CC</sub>=12 V, R<sub>1</sub>=100k, R<sub>2</sub>=22k,
+  R<sub>C</sub>=2.2k, R<sub>E</sub>=1k, β=100 เป็นตัวอย่างของ Lab 02
+  ที่ให้ Q-point อยู่ในช่วง Active
 
-## 8. สิ่งที่เหลือให้ผู้พัฒนาต่อ
+## 8. UI revision — Lab 02 layout
+
+หลังสร้างเวอร์ชันแรก ได้ปรับหน้าจอให้คล้ายตัวอย่างของ Lab 02 โดยไม่แตะสูตร:
+
+- Header: ชื่อ Lab 02, subtitle รายวิชา และ badge ด้านขวา
+- 3 คอลัมน์: Input Parameters | Circuit | DC Bias Results
+  (ยุบเป็นคอลัมน์เดียวเมื่อหน้าจอแคบกว่า 1000 px)
+- ภาพวงจรเป็น inline SVG อยู่ใน template ค่า V<sub>CC</sub>, R<sub>1</sub>,
+  R<sub>2</sub>, R<sub>C</sub>, R<sub>E</sub> และ β ในรูปผูกกับค่าที่ผู้ใช้กรอก
+  จึงเห็นค่าที่เพิ่งคำนวณได้ทันทีโดยไม่ต้องใช้ JavaScript
+- ตัวต้านทานมี dropdown หน่วย Ω / kΩ; `app.py` แปลงเป็นหน่วยฐานก่อนเรียก
+  `dc_bias.py` เพื่อให้สูตรยังรับหน่วย SI เหมือนเดิม
+- ผลลัพธ์แสดง 7 ค่า (V<sub>B</sub>, V<sub>E</sub>, V<sub>C</sub>,
+  V<sub>CE</sub>, I<sub>B</sub>, I<sub>C</sub>, I<sub>E</sub>)
+  พร้อมกล่องสถานะสีเขียว/เหลือง/แดงตาม region
+
+**การตัดสินใจ:** ไม่แก้ `dc_bias.py` เลย เพื่อให้ตัวเลขยังตรวจสอบด้วยมือชุดเดิมได้
+และไม่ปรับสูตรให้ตรงกับตัวเลขในภาพตัวอย่าง เพราะภาพนั้นใช้วิธี approximate
+(V<sub>B</sub> = V<sub>CC</sub>·R2/(R1+R2), I<sub>C</sub> ≈ I<sub>E</sub>)
+ซึ่งให้ผลต่างจากวิธี exact ที่งานนี้ใช้
+
+## 9. สิ่งที่เหลือให้ผู้พัฒนาต่อ
 
 - เพิ่มวงจรไบแอสแบบอื่นเป็นฟังก์ชันใหม่ใน `dc_bias.py`
 - เพิ่มกราฟ load line และจุด Q บนกราฟ (ต้องใช้ JavaScript หรือ SVG)
