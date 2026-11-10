@@ -69,6 +69,7 @@ transistor-simulator/
 ├── requirements.txt
 ├── README.md
 ├── AGENTS.md
+├── WEB-URL.txt
 └── docs/
     ├── design-note.md
     ├── validation.md
@@ -78,6 +79,7 @@ transistor-simulator/
 
 ## เอกสารเพิ่มเติม
 
+- [WEB-URL.txt](WEB-URL.txt) — ลิงก์เว็บแอป (local) และ repository
 - [docs/design-note.md](docs/design-note.md) — เหตุผลการออกแบบ สมการ และข้อจำกัด
 - [docs/validation.md](docs/validation.md) — ผลทดสอบและการตรวจสอบด้วยมือ
 - [docs/reflection.md](docs/reflection.md) — บันทึกการเรียนรู้และการใช้ AI
