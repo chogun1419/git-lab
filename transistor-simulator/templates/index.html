@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transistor DC Bias Simulator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <p class="eyebrow">Electronics Lab</p>
+    <h1>Transistor DC Bias Simulator</h1>
+    <p class="lede">
+      คำนวณจุดการทำงาน (Q-point) ของวงจรไบแอสแบบแบ่งแรงดัน
+      พร้อมตรวจสอบว่าทรานซิสเตอร์อยู่ในช่วง Active, Saturation หรือ Cutoff
+    </p>
+  </header>
+
+  <main class="layout">
+    <section class="card form-card" aria-labelledby="form-title">
+      <h2 id="form-title">ค่าของวงจร</h2>
+      <form action="{{ url_for('calculate') }}" method="post" novalidate>
+        <div class="field">
+          <label for="vcc_v">แรงดันไฟเลี้ยง <span class="symbol">V<sub>CC</sub></span></label>
+          <div class="input-row">
+            <input id="vcc_v" name="vcc_v" type="number" step="any" min="0"
+                   value="{{ values.vcc_v }}" required>
+            <span class="unit">V</span>
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="r1_ohm">ตัวต้านทานฐานบน <span class="symbol">R<sub>1</sub></span></label>
+            <div class="input-row">
+              <input id="r1_ohm" name="r1_ohm" type="number" step="any" min="0"
+                     value="{{ values.r1_ohm }}" required>
+              <span class="unit">Ω</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="r2_ohm">ตัวต้านทานฐานล่าง <span class="symbol">R<sub>2</sub></span></label>
+            <div class="input-row">
+              <input id="r2_ohm" name="r2_ohm" type="number" step="any" min="0"
+                     value="{{ values.r2_ohm }}" required>
+              <span class="unit">Ω</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="rc_ohm">ตัวต้านทานคอลเลกเตอร์ <span class="symbol">R<sub>C</sub></span></label>
+            <div class="input-row">
+              <input id="rc_ohm" name="rc_ohm" type="number" step="any" min="0"
+                     value="{{ values.rc_ohm }}" required>
+              <span class="unit">Ω</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="re_ohm">ตัวต้านทานอิมิตเตอร์ <span class="symbol">R<sub>E</sub></span></label>
+            <div class="input-row">
+              <input id="re_ohm" name="re_ohm" type="number" step="any" min="0"
+                     value="{{ values.re_ohm }}" required>
+              <span class="unit">Ω</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="beta">อัตราขยายกระแส <span class="symbol">β (h<sub>FE</sub>)</span></label>
+            <div class="input-row">
+              <input id="beta" name="beta" type="number" step="any" min="0"
+                     value="{{ values.beta }}" required>
+              <span class="unit">—</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="vbe_v">แรงดันฐาน-อิมิตเตอร์ <span class="symbol">V<sub>BE</sub></span></label>
+            <div class="input-row">
+              <input id="vbe_v" name="vbe_v" type="number" step="any" min="0"
+                     value="{{ values.vbe_v }}">
+              <span class="unit">V</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit">คำนวณ Q-point</button>
+      </form>
+
+      {% if error %}
+      <div class="alert alert-error" role="alert">
+        <strong>ตรวจสอบค่าที่กรอก:</strong> {{ error }}
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="card result-card" aria-labelledby="result-title">
+      <h2 id="result-title">ผลการคำนวณ</h2>
+
+      {% if result %}
+      <div class="region-badge" data-region="{{ result.region }}">
+        {{ region_label }}
+      </div>
+
+      <dl class="readings">
+        <div class="reading">
+          <dt>กระแสฐาน <span class="symbol">I<sub>B</sub></span></dt>
+          <dd>{{ "%.3f"|format(result.ib_a * 1000000) }} <span class="unit">µA</span></dd>
+        </div>
+        <div class="reading">
+          <dt>กระแสคอลเลกเตอร์ <span class="symbol">I<sub>C</sub></span></dt>
+          <dd>{{ "%.3f"|format(result.ic_a * 1000) }} <span class="unit">mA</span></dd>
+        </div>
+        <div class="reading">
+          <dt>กระแสอิมิตเตอร์ <span class="symbol">I<sub>E</sub></span></dt>
+          <dd>{{ "%.3f"|format(result.ie_a * 1000) }} <span class="unit">mA</span></dd>
+        </div>
+        <div class="reading">
+          <dt>แรงดันฐาน <span class="symbol">V<sub>B</sub></span></dt>
+          <dd>{{ "%.3f"|format(result.vb_v) }} <span class="unit">V</span></dd>
+        </div>
+        <div class="reading">
+          <dt>แรงดันอิมิตเตอร์ <span class="symbol">V<sub>E</sub></span></dt>
+          <dd>{{ "%.3f"|format(result.ve_v) }} <span class="unit">V</span></dd>
+        </div>
+        <div class="reading">
+          <dt>แรงดันคอลเลกเตอร์ <span class="symbol">V<sub>C</sub></span></dt>
+          <dd>{{ "%.3f"|format(result.vc_v) }} <span class="unit">V</span></dd>
+        </div>
+        <div class="reading highlight">
+          <dt>แรงดันคอลเลกเตอร์-อิมิตเตอร์ <span class="symbol">V<sub>CE</sub></span></dt>
+          <dd>{{ "%.3f"|format(result.vce_v) }} <span class="unit">V</span></dd>
+        </div>
+        <div class="reading">
+          <dt>กำลังสูญเสียที่ทรานซิสเตอร์ <span class="symbol">P<sub>D</sub></span></dt>
+          <dd>{{ "%.3f"|format(result.power_w * 1000) }} <span class="unit">mW</span></dd>
+        </div>
+      </dl>
+
+      {% if result.region == "saturation" %}
+      <div class="alert alert-warning" role="status">
+        วงจรอยู่ในช่วงอิ่มตัว กระแสถูกจำกัดที่
+        I<sub>C(sat)</sub> ≈ {{ "%.3f"|format(result.ic_sat_a * 1000) }} mA
+        และ V<sub>CE</sub> ≈ 0.2 V ค่าที่แสดงคือจุดที่วงจรทำได้จริง
+        ไม่ใช่ค่าที่สมการไบแอสทำนาย
+      </div>
+      {% elif result.region == "cutoff" %}
+      <div class="alert alert-warning" role="status">
+        แรงดันไบแอสที่ฐานต่ำกว่า V<sub>BE</sub> ทรานซิสเตอร์จึงไม่นำกระแส
+        (I<sub>B</sub> = I<sub>C</sub> = I<sub>E</sub> = 0)
+      </div>
+      {% endif %}
+
+      <details class="equations">
+        <summary>สมการและค่ากลางที่ใช้</summary>
+        <p>
+          V<sub>BB</sub> = {{ "%.3f"|format(result.vbb_v) }} V ·
+          R<sub>B</sub> = {{ "%.1f"|format(result.rb_ohm) }} Ω
+        </p>
+        <pre>V_BB = V_CC · R2 / (R1 + R2)
+R_B  = R1 || R2
+I_B  = (V_BB − V_BE) / (R_B + (β + 1)·R_E)
+I_C  = β · I_B
+V_CE = V_CC − I_C·R_C − I_E·R_E</pre>
+      </details>
+      {% else %}
+      <p class="empty-state">
+        กรอกค่าองค์ประกอบทางด้านซ้าย แล้วกด
+        <strong>คำนวณ Q-point</strong> เพื่อดูผลลัพธ์
+      </p>
+      {% endif %}
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      สมมติฐาน: ทรานซิสเตอร์เป็น BJT แบบ NPN, V<sub>BE</sub> คงที่ (ค่าเริ่มต้น 0.7 V)
+      และไม่คิดผลของ Early effect
+    </p>
+  </footer>
+</body>
+</html>
