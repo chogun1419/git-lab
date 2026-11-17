@@ -19,3 +19,12 @@
 แบบแบ่งแรงดัน พร้อมบอกช่วง Active / Saturation / Cutoff
 
 ไฟล์และวิธีรัน: ดู [transistor-simulator/README.md](transistor-simulator/README.md)
+
+### Transistor Bias Modes (Lab 3)
+
+เว็บแอปพลิเคชัน Flask เดียวกัน แต่เพิ่มโหมด **Fixed Bias** และ **Emitter Bias**
+(แหล่งจ่ายเดียว) นอกเหนือจาก Voltage Divider โดยผลของ Divider เดิมคงเดิม
+
+- โฟลเดอร์ส่งงานแยก: [`lab3/`](lab3/README.md)
+- ตารางตรวจ A1–A5, ค่าอ้างอิงอิสระ และหลักฐาน: [lab3/docs/validation.md](lab3/docs/validation.md)
+- รัน: `cd lab3` แล้ว `python app.py` → เปิด <http://127.0.0.1:5000>
