@@ -136,7 +136,80 @@ templates/index.html + static/style.css
 (V<sub>B</sub> = V<sub>CC</sub>·R2/(R1+R2), I<sub>C</sub> ≈ I<sub>E</sub>)
 ซึ่งให้ผลต่างจากวิธี exact ที่งานนี้ใช้
 
-## 9. สิ่งที่เหลือให้ผู้พัฒนาต่อ
+## 9. Lab 3 — Fixed Bias และ Emitter Bias
+
+เพิ่มสองโทโพโลยีโดยไม่แตะ `calculate_voltage_divider_bias` แม้แต่บรรทัดเดียว
+
+### 9.1 สมการ
+
+**Fixed bias** (R<sub>B</sub> จาก V<sub>CC</sub> มาที่เบส, อิมิตเตอร์ลงกราวด์)
+
+```
+I_B  = (V_CC − V_BE) / R_B
+I_C  = β · I_B
+I_E  = (β + 1) · I_B
+V_B  = V_BE          V_E = 0
+V_C  = V_CC − I_C · R_C
+V_CE = V_C − V_E
+I_C(sat) = (V_CC − 0.2) / R_C
+```
+
+**Emitter bias** (R<sub>B</sub> จาก V<sub>CC</sub> มาที่เบส, R<sub>E</sub> จากอิมิตเตอร์ลงกราวด์)
+
+```
+I_B  = (V_CC − V_BE) / (R_B + (β + 1) · R_E)
+I_C  = β · I_B
+I_E  = (β + 1) · I_B
+V_E  = I_E · R_E
+V_B  = V_BE + V_E
+V_C  = V_CC − I_C · R_C
+V_CE = V_C − V_E
+I_C(sat) = (V_CC − 0.2) / (R_C + R_E)
+```
+
+### 9.2 การเลือกฟังก์ชัน
+
+อยู่ใน `dc_bias.py` ไม่ใช่ route เพราะเป็นการเลือกสูตร:
+
+```python
+BIAS_FUNCTIONS = {
+    "divider": calculate_voltage_divider_bias,
+    "fixed": calculate_fixed_bias,
+    "emitter": calculate_emitter_bias,
+}
+
+def calculate_bias(mode: str, **values: float) -> dict[str, float | str]:
+    ...
+```
+
+`app.py` ทำหน้าที่อ่าน `mode` จากฟอร์ม ตรวจว่าอยู่ใน `MODE_FIELDS` แล้วเรียก
+`calculate_bias(mode, **numbers)`
+
+### 9.3 การแปลงหน่วย
+
+อยู่ที่ `app.py` `_parse_form()` ที่เดียว: อ่าน `<field>_unit` (`ohm` / `kohm`)
+แล้วคูณด้วย `UNIT_SCALE` (`1.0` / `1000.0`) ก่อนส่งเข้า `dc_bias.py`
+โมดูลคำนวณจึงรับหน่วย SI เสมอ (Ω, V, A) และไม่รู้จักหน่วยที่ผู้ใช้เลือก
+
+### 9.4 การตรวจอินพุตและ Warning
+
+- ฟิลด์ว่าง → `<field> is required.` (ยกเว้น V_BE ที่ใช้ค่า 0.7 V)
+- ค่าติดลบ → `<field> must not be negative.`
+- ค่าเป็นศูนย์ → `<field> must be greater than zero.`
+- `V_BE ≥ V_CC` → `vbe_v must be less than vcc_v.`
+- `region`: `active` เมื่อ `V_CE > 0.2 V`; `saturation` เมื่อ `V_CE ≤ 0.2 V`
+  (clamp กระแสที่ I_C(sat)); `cutoff` เมื่อ `I_B ≤ 0`
+- โหมดใหม่แสดง `Warning:` ในกล่องสถานะเมื่อไม่อยู่ใน Forward Active
+- Divider คงเงื่อนไข `V_CE < 0.2` และข้อความสถานะเดิมทุกตัวอักษร
+
+### 9.5 UI
+
+- แถบเลือกโหมด 3 ปุ่ม (radio) ใช้ CSS `:has()` แสดงเฉพาะฟิลด์ของโหมดนั้น
+  ไม่ใช้ JavaScript และไม่เพิ่ม dependency
+- ภาพวงจรเป็น SVG 3 แบบ (divider / fixed / emitter) ป้ายค่าผูกกับ `values`
+- คีย์ผลลัพธ์ยังเป็นชุดเดียวกัน 12 คีย์ ทำให้ตารางผลลัพธ์ใช้ร่วมได้ทุกโหมด
+
+## 10. สิ่งที่เหลือให้ผู้พัฒนาต่อ
 
 - เพิ่มวงจรไบแอสแบบอื่นเป็นฟังก์ชันใหม่ใน `dc_bias.py`
 - เพิ่มกราฟ load line และจุด Q บนกราฟ (ต้องใช้ JavaScript หรือ SVG)

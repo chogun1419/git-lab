@@ -19,7 +19,7 @@
         </div>
         <div>
           <h1>Lab 02: BJT DC Bias Web App</h1>
-          <p class="subtitle">ENG29 2121 – Common Emitter (Voltage Divider Bias)</p>
+          <p class="subtitle">ENG29 2121 – Common Emitter (Divider / Fixed / Emitter Bias)</p>
         </div>
       </div>
       <div class="course-badge">
@@ -45,24 +45,47 @@
         </h2>
 
         <form action="{{ url_for('calculate') }}" method="post" novalidate>
+          <div class="mode-picker" role="radiogroup" aria-label="Bias mode">
+            <input type="radio" id="mode-divider" name="mode" value="divider"
+                   {% if mode == 'divider' %}checked{% endif %}>
+            <label for="mode-divider">Voltage Divider</label>
+
+            <input type="radio" id="mode-fixed" name="mode" value="fixed"
+                   {% if mode == 'fixed' %}checked{% endif %}>
+            <label for="mode-fixed">Fixed Bias</label>
+
+            <input type="radio" id="mode-emitter" name="mode" value="emitter"
+                   {% if mode == 'emitter' %}checked{% endif %}>
+            <label for="mode-emitter">Emitter Bias</label>
+          </div>
+
           <div class="field">
             <label for="vcc_v">V<sub>CC</sub> <span class="desc">(Supply Voltage)</span></label>
             <input id="vcc_v" name="vcc_v" type="number" step="any" min="0" value="{{ values.vcc_v }}" required>
             <span class="unit">V</span>
           </div>
 
-          <div class="field">
+          <div class="field mode-only fields-rb">
+            <label for="rb">R<sub>B</sub> <span class="desc">(Base Resistor)</span></label>
+            <input id="rb" name="rb" type="number" step="any" min="0" value="{{ values.rb }}">
+            <select name="rb_unit" aria-label="RB unit">
+              <option value="kohm" {% if values.rb_unit == 'kohm' %}selected{% endif %}>kΩ</option>
+              <option value="ohm" {% if values.rb_unit == 'ohm' %}selected{% endif %}>Ω</option>
+            </select>
+          </div>
+
+          <div class="field mode-only fields-divider">
             <label for="r1">R<sub>1</sub> <span class="desc">(Upper Divider)</span></label>
-            <input id="r1" name="r1" type="number" step="any" min="0" value="{{ values.r1 }}" required>
+            <input id="r1" name="r1" type="number" step="any" min="0" value="{{ values.r1 }}">
             <select name="r1_unit" aria-label="R1 unit">
               <option value="kohm" {% if values.r1_unit == 'kohm' %}selected{% endif %}>kΩ</option>
               <option value="ohm" {% if values.r1_unit == 'ohm' %}selected{% endif %}>Ω</option>
             </select>
           </div>
 
-          <div class="field">
+          <div class="field mode-only fields-divider">
             <label for="r2">R<sub>2</sub> <span class="desc">(Lower Divider)</span></label>
-            <input id="r2" name="r2" type="number" step="any" min="0" value="{{ values.r2 }}" required>
+            <input id="r2" name="r2" type="number" step="any" min="0" value="{{ values.r2 }}">
             <select name="r2_unit" aria-label="R2 unit">
               <option value="kohm" {% if values.r2_unit == 'kohm' %}selected{% endif %}>kΩ</option>
               <option value="ohm" {% if values.r2_unit == 'ohm' %}selected{% endif %}>Ω</option>
@@ -78,9 +101,9 @@
             </select>
           </div>
 
-          <div class="field">
+          <div class="field mode-only fields-re">
             <label for="re">R<sub>E</sub> <span class="desc">(Emitter Resistor)</span></label>
-            <input id="re" name="re" type="number" step="any" min="0" value="{{ values.re }}" required>
+            <input id="re" name="re" type="number" step="any" min="0" value="{{ values.re }}">
             <select name="re_unit" aria-label="RE unit">
               <option value="kohm" {% if values.re_unit == 'kohm' %}selected{% endif %}>kΩ</option>
               <option value="ohm" {% if values.re_unit == 'ohm' %}selected{% endif %}>Ω</option>
@@ -125,10 +148,11 @@
               <path d="M7 6h10M6.4 7.6 11 16M17.6 7.6 13 16"/>
             </svg>
           </span>
-          Circuit: Common-Emitter Amplifier
+          Circuit: {{ mode_label }}
         </h2>
 
         <div class="circuit">
+          {% if mode == 'divider' %}
           <svg data-testid="circuit" viewBox="0 0 360 435" width="100%" role="img"
                aria-label="NPN common-emitter voltage-divider bias circuit">
             <!-- rails -->
@@ -199,6 +223,120 @@
               <text x="158" y="311" text-anchor="middle" font-size="10" fill="#64748b">β = {{ values.beta }}</text>
             </g>
           </svg>
+
+          {% elif mode == 'fixed' %}
+          <svg data-testid="circuit" viewBox="0 0 360 435" width="100%" role="img"
+               aria-label="NPN fixed bias circuit">
+            <g stroke="#334155" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="80" y1="60" x2="280" y2="60"/>
+              <line x1="80" y1="60" x2="80" y2="105"/>
+              <line x1="80" y1="175" x2="80" y2="230"/>
+              <line x1="80" y1="230" x2="147" y2="230"/>
+              <line x1="280" y1="60" x2="280" y2="105"/>
+              <line x1="280" y1="165" x2="280" y2="180"/>
+              <line x1="280" y1="180" x2="212" y2="180"/>
+              <line x1="212" y1="180" x2="212" y2="205"/>
+              <line x1="212" y1="255" x2="212" y2="300"/>
+              <line x1="212" y1="300" x2="280" y2="300"/>
+              <line x1="280" y1="300" x2="280" y2="400"/>
+            </g>
+
+            <circle cx="185" cy="230" r="38" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+            <g stroke="#334155" fill="none" stroke-linecap="round">
+              <line x1="147" y1="230" x2="172" y2="230" stroke-width="2"/>
+              <line x1="172" y1="212" x2="172" y2="248" stroke-width="5"/>
+              <line x1="172" y1="221" x2="212" y2="205" stroke-width="2"/>
+              <line x1="172" y1="239" x2="212" y2="255" stroke-width="2"/>
+            </g>
+            <polygon points="212,255 202.2,255.4 205.1,248" fill="#334155"/>
+
+            <g fill="#eef3ff" stroke="#3450b5" stroke-width="2">
+              <rect x="67" y="105" width="26" height="70" rx="3"/>
+              <rect x="267" y="105" width="26" height="60" rx="3"/>
+            </g>
+
+            <g stroke="#334155" stroke-width="2" stroke-linecap="round">
+              <line x1="280" y1="400" x2="280" y2="412"/>
+              <line x1="265" y1="412" x2="295" y2="412"/>
+              <line x1="271" y1="419" x2="289" y2="419"/>
+              <line x1="276" y1="426" x2="284" y2="426"/>
+            </g>
+
+            <g font-family="'Segoe UI','Noto Sans Thai',sans-serif" fill="#1e293b">
+              <text x="180" y="45" text-anchor="middle" font-size="12.5" font-weight="600">
+                V<tspan baseline-shift="sub" font-size="9">CC</tspan> = {{ values.vcc_v }} V
+              </text>
+
+              <text x="58" y="128" text-anchor="end" font-size="12" font-weight="700">R<tspan baseline-shift="sub" font-size="8">B</tspan></text>
+              <text x="58" y="144" text-anchor="end" font-size="10.5" fill="#64748b">{{ values.rb }} {{ unit_labels.rb }}</text>
+
+              <text x="302" y="128" font-size="12" font-weight="700">R<tspan baseline-shift="sub" font-size="8">C</tspan></text>
+              <text x="302" y="144" font-size="10.5" fill="#64748b">{{ values.rc }} {{ unit_labels.rc }}</text>
+
+              <text x="158" y="296" text-anchor="middle" font-size="11" font-weight="700">Q<tspan baseline-shift="sub" font-size="8">1</tspan> NPN</text>
+              <text x="158" y="311" text-anchor="middle" font-size="10" fill="#64748b">β = {{ values.beta }}</text>
+            </g>
+          </svg>
+
+          {% else %}
+          <svg data-testid="circuit" viewBox="0 0 360 435" width="100%" role="img"
+               aria-label="NPN emitter bias circuit">
+            <g stroke="#334155" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="80" y1="60" x2="280" y2="60"/>
+              <line x1="80" y1="60" x2="80" y2="105"/>
+              <line x1="80" y1="175" x2="80" y2="230"/>
+              <line x1="80" y1="230" x2="147" y2="230"/>
+              <line x1="280" y1="60" x2="280" y2="105"/>
+              <line x1="280" y1="165" x2="280" y2="180"/>
+              <line x1="280" y1="180" x2="212" y2="180"/>
+              <line x1="212" y1="180" x2="212" y2="205"/>
+              <line x1="212" y1="255" x2="212" y2="300"/>
+              <line x1="212" y1="300" x2="280" y2="300"/>
+              <line x1="280" y1="300" x2="280" y2="320"/>
+              <line x1="280" y1="380" x2="280" y2="400"/>
+            </g>
+
+            <circle cx="185" cy="230" r="38" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+            <g stroke="#334155" fill="none" stroke-linecap="round">
+              <line x1="147" y1="230" x2="172" y2="230" stroke-width="2"/>
+              <line x1="172" y1="212" x2="172" y2="248" stroke-width="5"/>
+              <line x1="172" y1="221" x2="212" y2="205" stroke-width="2"/>
+              <line x1="172" y1="239" x2="212" y2="255" stroke-width="2"/>
+            </g>
+            <polygon points="212,255 202.2,255.4 205.1,248" fill="#334155"/>
+
+            <g fill="#eef3ff" stroke="#3450b5" stroke-width="2">
+              <rect x="67" y="105" width="26" height="70" rx="3"/>
+              <rect x="267" y="105" width="26" height="60" rx="3"/>
+              <rect x="267" y="320" width="26" height="60" rx="3"/>
+            </g>
+
+            <g stroke="#334155" stroke-width="2" stroke-linecap="round">
+              <line x1="280" y1="400" x2="280" y2="412"/>
+              <line x1="265" y1="412" x2="295" y2="412"/>
+              <line x1="271" y1="419" x2="289" y2="419"/>
+              <line x1="276" y1="426" x2="284" y2="426"/>
+            </g>
+
+            <g font-family="'Segoe UI','Noto Sans Thai',sans-serif" fill="#1e293b">
+              <text x="180" y="45" text-anchor="middle" font-size="12.5" font-weight="600">
+                V<tspan baseline-shift="sub" font-size="9">CC</tspan> = {{ values.vcc_v }} V
+              </text>
+
+              <text x="58" y="128" text-anchor="end" font-size="12" font-weight="700">R<tspan baseline-shift="sub" font-size="8">B</tspan></text>
+              <text x="58" y="144" text-anchor="end" font-size="10.5" fill="#64748b">{{ values.rb }} {{ unit_labels.rb }}</text>
+
+              <text x="302" y="128" font-size="12" font-weight="700">R<tspan baseline-shift="sub" font-size="8">C</tspan></text>
+              <text x="302" y="144" font-size="10.5" fill="#64748b">{{ values.rc }} {{ unit_labels.rc }}</text>
+
+              <text x="302" y="338" font-size="12" font-weight="700">R<tspan baseline-shift="sub" font-size="8">E</tspan></text>
+              <text x="302" y="354" font-size="10.5" fill="#64748b">{{ values.re }} {{ unit_labels.re }}</text>
+
+              <text x="158" y="296" text-anchor="middle" font-size="11" font-weight="700">Q<tspan baseline-shift="sub" font-size="8">1</tspan> NPN</text>
+              <text x="158" y="311" text-anchor="middle" font-size="10" fill="#64748b">β = {{ values.beta }}</text>
+            </g>
+          </svg>
+          {% endif %}
         </div>
       </section>
 
