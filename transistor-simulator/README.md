@@ -27,7 +27,7 @@ R<sub>2</sub>=22 kΩ, R<sub>C</sub>=2.2 kΩ, R<sub>E</sub>=1 kΩ, β=100, V<sub>
 |---|---|
 | GitHub repository | <https://github.com/chogun1419/git-lab> |
 | โฟลเดอร์โปรเจกต์ | <https://github.com/chogun1419/git-lab/tree/main/transistor-simulator> |
-| **Commit SHA (Lab 3)** | `SHA_PLACEHOLDER_LAB3` |
+| **Commit SHA (Lab 3)** | `3345025` (ดู commit เต็มได้ที่ `git show 3345025`) |
 | เว็บ (local) | <http://127.0.0.1:5000/> |
 
 ## วิธีรันและเปิดเว็บ
