@@ -136,4 +136,10 @@ transistor-simulator/
 - [docs/design-note.md](docs/design-note.md) — เหตุผลการออกแบบ สมการ 3 โหมด และข้อจำกัด
 - [docs/validation.md](docs/validation.md) — ผลทดสอบ ตาราง A1–A5 และค่าอ้างอิงอิสระ
 - [docs/test-log.txt](docs/test-log.txt) — log การรันเทสต์จริง
-- [docs/reflection.md](docs/reflection.md) — บันทึกการเรียนรู้และการใช้ AI
+- [docs/reflection.md](docs/reflection.md) — บันทึกการเรียนรู้และการใช้ AI## Lab 04: Common-Emitter Amplifier Simulator v1 (ngspice Integration)
+
+### How to Run
+1. Ensure `ngspice_con.exe` (or `ngspice`) is installed and available in system `PATH`.
+2. Install Python dependencies:
+   ```bash
+   pip install -r requirements.txt

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Common-Emitter Amplifier Simulator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <rect x="7" y="7" width="10" height="10" rx="2"/>
+            <rect x="10" y="10" width="4" height="4" rx="1" fill="currentColor" stroke="none"/>
+            <path d="M9 3v4M12 3v4M15 3v4M9 17v4M12 17v4M15 17v4M3 9h4M3 12h4M3 15h4M17 9h4M17 12h4M17 15h4"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Common-Emitter Amplifier Simulator</h1>
+          <p class="subtitle">ENG29 2121 – Voltage-divider CE stage with real ngspice runs</p>
+        </div>
+      </div>
+      <nav class="topnav" aria-label="Pages">
+        <a href="{{ url_for('index') }}">DC Bias</a>
+        <a href="{{ url_for('amplifier_page') }}" aria-current="page">CE Amplifier</a>
+      </nav>
+    </header>
+
+    <main class="grid3">
+      <section class="card" aria-labelledby="input-title">
+        <h2 id="input-title">Bias and Signal Input</h2>
+
+        <form action="{{ url_for('amplifier_simulate') }}" method="post" novalidate>
+          <div class="field">
+            <label for="vcc_v">V<sub>CC</sub> <span class="desc">(Supply Voltage)</span></label>
+            <input id="vcc_v" name="vcc_v" type="number" step="any" min="0" value="{{ values.vcc_v }}" required>
+            <span class="unit">V</span>
+          </div>
+
+          <div class="field">
+            <label for="r1">R<sub>1</sub> <span class="desc">(Upper Divider)</span></label>
+            <input id="r1" name="r1" type="number" step="any" min="0" value="{{ values.r1 }}" required>
+            <select name="r1_unit" aria-label="R1 unit">
+              <option value="kohm" {% if values.r1_unit == 'kohm' %}selected{% endif %}>kΩ</option>
+              <option value="ohm" {% if values.r1_unit == 'ohm' %}selected{% endif %}>Ω</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="r2">R<sub>2</sub> <span class="desc">(Lower Divider)</span></label>
+            <input id="r2" name="r2" type="number" step="any" min="0" value="{{ values.r2 }}" required>
+            <select name="r2_unit" aria-label="R2 unit">
+              <option value="kohm" {% if values.r2_unit == 'kohm' %}selected{% endif %}>kΩ</option>
+              <option value="ohm" {% if values.r2_unit == 'ohm' %}selected{% endif %}>Ω</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="rc">R<sub>C</sub> <span class="desc">(Collector Resistor)</span></label>
+            <input id="rc" name="rc" type="number" step="any" min="0" value="{{ values.rc }}" required>
+            <select name="rc_unit" aria-label="RC unit">
+              <option value="kohm" {% if values.rc_unit == 'kohm' %}selected{% endif %}>kΩ</option>
+              <option value="ohm" {% if values.rc_unit == 'ohm' %}selected{% endif %}>Ω</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="re">R<sub>E</sub> <span class="desc">(Emitter Resistor)</span></label>
+            <input id="re" name="re" type="number" step="any" min="0" value="{{ values.re }}" required>
+            <select name="re_unit" aria-label="RE unit">
+              <option value="kohm" {% if values.re_unit == 'kohm' %}selected{% endif %}>kΩ</option>
+              <option value="ohm" {% if values.re_unit == 'ohm' %}selected{% endif %}>Ω</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="beta">β <span class="desc">(Current Gain)</span></label>
+            <input id="beta" name="beta" type="number" step="any" min="0" value="{{ values.beta }}" required>
+            <span class="unit">—</span>
+          </div>
+
+          <div class="field">
+            <label for="vin_amp_v">v<sub>in</sub> <span class="desc">(Input Amplitude)</span></label>
+            <input id="vin_amp_v" name="vin_amp_v" type="number" step="any" min="0" value="{{ values.vin_amp_v }}" required>
+            <select name="vin_amp_v_unit" aria-label="Amplitude unit">
+              <option value="mv" {% if values.vin_amp_v_unit == 'mv' %}selected{% endif %}>mV</option>
+              <option value="v" {% if values.vin_amp_v_unit == 'v' %}selected{% endif %}>V</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="freq_hz">f <span class="desc">(Frequency)</span></label>
+            <input id="freq_hz" name="freq_hz" type="number" step="any" min="0" value="{{ values.freq_hz }}" required>
+            <select name="freq_hz_unit" aria-label="Frequency unit">
+              <option value="hz" {% if values.freq_hz_unit == 'hz' %}selected{% endif %}>Hz</option>
+              <option value="khz" {% if values.freq_hz_unit == 'khz' %}selected{% endif %}>kHz</option>
+            </select>
+          </div>
+
+          <button type="submit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 17l5-6 4 4 3-4 6 6"/><path d="M3 21h18"/>
+            </svg>
+            Run ngspice
+          </button>
+        </form>
+
+        {% if error %}
+        <div class="alert alert-error" role="alert">
+          <strong>{{ error }}</strong>
+          {% if hint %}<p class="alert-hint">{{ hint }}</p>{% endif %}
+        </div>
+        {% if detail %}
+        <pre class="spice-log" data-testid="spice-error-detail">{{ detail }}</pre>
+        {% endif %}
+        {% endif %}
+
+        <div class="fixed-passives">
+          <h3>Fixed passives</h3>
+          <ul>
+            {% for name, value in fixed_passives %}
+            <li><span>{{ name }}</span><strong>{{ value }}</strong></li>
+            {% else %}
+            <li><span>C1 / C2 coupling</span><strong>1 µF</strong></li>
+            <li><span>CE emitter bypass</span><strong>100 µF</strong></li>
+            <li><span>RL load</span><strong>10 kΩ</strong></li>
+            {% endfor %}
+          </ul>
+          <p class="hint">
+            V<sub>BE</sub> is 0.70 V in the analytical reference; the SPICE model
+            computes its own V<sub>BE</sub> from the collector current.
+          </p>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="circuit-title">
+        <h2 id="circuit-title">Reference Circuit</h2>
+        <div class="circuit">
+          <svg data-testid="circuit" viewBox="0 0 470 470" width="100%" role="img"
+               aria-label="NPN common-emitter amplifier, voltage-divider bias">
+            <g stroke="#334155" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <!-- supply rail and divider column -->
+              <line x1="60" y1="55" x2="320" y2="55"/>
+              <line x1="60" y1="55" x2="60" y2="95"/>
+              <line x1="60" y1="155" x2="60" y2="230"/>
+              <line x1="60" y1="230" x2="60" y2="265"/>
+              <line x1="60" y1="325" x2="60" y2="395"/>
+              <!-- base path through the coupling capacitor -->
+              <line x1="60" y1="230" x2="95" y2="230"/>
+              <line x1="103" y1="230" x2="150" y2="230"/>
+              <!-- collector to Rc and through the output capacitor -->
+              <line x1="218" y1="205" x2="218" y2="180"/>
+              <line x1="218" y1="180" x2="288" y2="180"/>
+              <line x1="296" y1="180" x2="390" y2="180"/>
+              <line x1="280" y1="55" x2="280" y2="100"/>
+              <line x1="280" y1="160" x2="280" y2="180"/>
+              <!-- load -->
+              <line x1="390" y1="180" x2="390" y2="240"/>
+              <line x1="390" y1="300" x2="390" y2="395"/>
+              <!-- emitter, emitter resistor and bypass capacitor -->
+              <line x1="218" y1="255" x2="218" y2="300"/>
+              <line x1="218" y1="300" x2="280" y2="300"/>
+              <line x1="280" y1="300" x2="280" y2="315"/>
+              <line x1="280" y1="375" x2="280" y2="395"/>
+              <line x1="280" y1="300" x2="310" y2="300"/>
+              <line x1="310" y1="300" x2="310" y2="330"/>
+              <line x1="310" y1="338" x2="310" y2="395"/>
+              <!-- ground rail -->
+              <line x1="60" y1="395" x2="390" y2="395"/>
+            </g>
+
+            <!-- capacitor plates -->
+            <g stroke="#0f766e" stroke-width="3" stroke-linecap="round">
+              <line x1="95" y1="216" x2="95" y2="244"/>
+              <line x1="103" y1="216" x2="103" y2="244"/>
+              <line x1="288" y1="166" x2="288" y2="194"/>
+              <line x1="296" y1="166" x2="296" y2="194"/>
+              <line x1="296" y1="330" x2="324" y2="330"/>
+              <line x1="296" y1="338" x2="324" y2="338"/>
+            </g>
+
+            <!-- transistor -->
+            <circle cx="190" cy="230" r="38" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+            <g stroke="#334155" fill="none" stroke-linecap="round">
+              <line x1="150" y1="230" x2="178" y2="230" stroke-width="2"/>
+              <line x1="178" y1="212" x2="178" y2="248" stroke-width="5"/>
+              <line x1="178" y1="221" x2="218" y2="205" stroke-width="2"/>
+              <line x1="178" y1="239" x2="218" y2="255" stroke-width="2"/>
+            </g>
+            <polygon points="218,255 208.2,255.4 211.1,248" fill="#334155"/>
+
+            <!-- resistors -->
+            <g fill="#eef3ff" stroke="#3450b5" stroke-width="2">
+              <rect x="47" y="95" width="26" height="60" rx="3"/>
+              <rect x="47" y="265" width="26" height="60" rx="3"/>
+              <rect x="267" y="100" width="26" height="60" rx="3"/>
+              <rect x="267" y="315" width="26" height="60" rx="3"/>
+              <rect x="377" y="240" width="26" height="60" rx="3"/>
+            </g>
+
+            <!-- ground symbol -->
+            <g stroke="#334155" stroke-width="2" stroke-linecap="round">
+              <line x1="205" y1="395" x2="205" y2="407"/>
+              <line x1="190" y1="407" x2="220" y2="407"/>
+              <line x1="196" y1="414" x2="214" y2="414"/>
+              <line x1="201" y1="421" x2="209" y2="421"/>
+            </g>
+
+            <!-- labels -->
+            <g font-family="'Segoe UI','Noto Sans Thai',sans-serif" fill="#1e293b">
+              <text x="190" y="40" text-anchor="middle" font-size="12.5" font-weight="600">
+                V<tspan baseline-shift="sub" font-size="9">CC</tspan> = {{ values.vcc_v }} V
+              </text>
+
+              <text x="40" y="120" text-anchor="end" font-size="12" font-weight="700">R<tspan baseline-shift="sub" font-size="8">1</tspan></text>
+              <text x="40" y="136" text-anchor="end" font-size="10.5" fill="#64748b">{{ values.r1 }} {{ unit_labels.r1 }}</text>
+
+              <text x="40" y="290" text-anchor="end" font-size="12" font-weight="700">R<tspan baseline-shift="sub" font-size="8">2</tspan></text>
+              <text x="40" y="306" text-anchor="end" font-size="10.5" fill="#64748b">{{ values.r2 }} {{ unit_labels.r2 }}</text>
+
+              <text x="302" y="120" font-size="12" font-weight="700">R<tspan baseline-shift="sub" font-size="8">C</tspan></text>
+              <text x="302" y="136" font-size="10.5" fill="#64748b">{{ values.rc }} {{ unit_labels.rc }}</text>
+
+              <text x="212" y="330" text-anchor="end" font-size="12" font-weight="700">R<tspan baseline-shift="sub" font-size="8">E</tspan></text>
+              <text x="212" y="346" text-anchor="end" font-size="10.5" fill="#64748b">{{ values.re }} {{ unit_labels.re }}</text>
+
+              <text x="412" y="262" font-size="12" font-weight="700">R<tspan baseline-shift="sub" font-size="8">L</tspan></text>
+              <text x="412" y="278" font-size="10.5" fill="#64748b">10 kΩ</text>
+
+              <text x="99" y="210" text-anchor="middle" font-size="10.5" fill="#0f766e">C1 1 µF</text>
+              <text x="292" y="212" text-anchor="middle" font-size="10.5" fill="#0f766e">C2 1 µF</text>
+              <text x="326" y="360" font-size="10.5" fill="#0f766e">CE 100 µF</text>
+
+              <text x="77" y="254" text-anchor="middle" font-size="10.5" fill="#64748b">v<tspan baseline-shift="sub" font-size="8">in</tspan></text>
+              <text x="330" y="172" font-size="10.5" fill="#64748b">out</text>
+
+              <text x="160" y="286" text-anchor="middle" font-size="11" font-weight="700">Q<tspan baseline-shift="sub" font-size="8">1</tspan> NPN</text>
+              <text x="160" y="301" text-anchor="middle" font-size="10" fill="#64748b">β = {{ values.beta }}</text>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="results-title">
+        <h2 id="results-title">Q-Point: Two Sources</h2>
+
+        {% if sim %}
+        <div class="sources">
+          <div class="source" data-source="spice">
+            <h3>SPICE (ngspice .op)</h3>
+            <table class="readings">
+              <tbody>
+                <tr><th>V<sub>CC</sub></th><td data-testid="spice-vcc">{{ "%.3f"|format(sim.op.vcc_v) }} <span class="unit">V</span></td></tr>
+                <tr><th>V<sub>B</sub></th><td data-testid="spice-vb">{{ "%.3f"|format(sim.op.vb_v) }} <span class="unit">V</span></td></tr>
+                <tr><th>V<sub>E</sub></th><td data-testid="spice-ve">{{ "%.3f"|format(sim.op.ve_v) }} <span class="unit">V</span></td></tr>
+                <tr><th>V<sub>C</sub></th><td data-testid="spice-vc">{{ "%.3f"|format(sim.op.vc_v) }} <span class="unit">V</span></td></tr>
+                <tr><th>I(V<sub>CC</sub>)</th><td>{{ "%.3f"|format(sim.op.i_vcc_a * 1000) }} <span class="unit">mA</span></td></tr>
+              </tbody>
+            </table>
+            <p class="hint">
+              Read from <code>.op</code>; the model computes V<sub>BE</sub> itself.
+              I(V<sub>CC</sub>) is negative because ngspice counts current flowing
+              into the supply's positive terminal, i.e. out of the source.
+            </p>
+          </div>
+
+          <div class="source" data-source="analytical">
+            <h3>Analytical (dc_bias.py)</h3>
+            <table class="readings">
+              <tbody>
+                <tr><th>V<sub>B</sub></th><td>{{ "%.2f"|format(analytical.vb_v) }} <span class="unit">V</span></td></tr>
+                <tr><th>V<sub>E</sub></th><td>{{ "%.2f"|format(analytical.ve_v) }} <span class="unit">V</span></td></tr>
+                <tr><th>V<sub>C</sub></th><td>{{ "%.2f"|format(analytical.vc_v) }} <span class="unit">V</span></td></tr>
+                <tr><th>V<sub>CE</sub></th><td>{{ "%.2f"|format(analytical.vce_v) }} <span class="unit">V</span></td></tr>
+                <tr><th>I<sub>C</sub></th><td>{{ "%.2f"|format(analytical.ic_a * 1000) }} <span class="unit">mA</span></td></tr>
+              </tbody>
+            </table>
+            <p class="hint">Constant V<sub>BE</sub> = 0.70 V, no Early effect.</p>
+          </div>
+        </div>
+
+        <div class="status" data-region="{{ analytical.region }}" role="status">
+          <div>
+            <p class="status-title">{{ status_title }}</p>
+            <p class="status-detail">{{ status_detail }}</p>
+          </div>
+        </div>
+
+        <h3 class="subhead">At {{ stage.freq_hz|hz }}</h3>
+        <table class="readings">
+          <tbody>
+            <tr>
+              <th>Gain (SPICE)</th>
+              <td data-testid="ac-gain">{{ point.gain_db|db }} <span class="unit">at {{ point.freq_hz|hz }}</span></td>
+            </tr>
+            <tr>
+              <th>Phase (SPICE)</th>
+              <td>{{ point.phase_deg|deg }}</td>
+            </tr>
+            <tr>
+              <th>Gain (analytical midband)</th>
+              <td>{% if estimate %}{{ estimate.gain_midband_db|db }}{% else %}—{% endif %} <span class="unit">estimate</span></td>
+            </tr>
+            <tr>
+              <th>Input swing</th>
+              <td>{{ swing_in_v|volts }} <span class="unit">peak-to-peak</span></td>
+            </tr>
+            <tr>
+              <th>Output swing</th>
+              <td>{{ swing_out_v|volts }} <span class="unit">peak-to-peak</span></td>
+            </tr>
+          </tbody>
+        </table>
+        {% else %}
+        <p class="empty-state" data-testid="empty-state">
+          Enter the stage values and press <strong>Run ngspice</strong>. The page
+          runs a real <code>.op</code>, <code>.ac</code> and <code>.tran</code>
+          analysis; nothing is drawn until ngspice returns.
+        </p>
+        {% endif %}
+      </section>
+    </main>
+
+    {% if sim %}
+    <section class="card wide" aria-labelledby="ac-title">
+      <h2 id="ac-title">AC Frequency Response</h2>
+      <div class="charts">
+        <figure class="chart">
+          <figcaption>Gain magnitude (dB)</figcaption>
+          <svg data-testid="ac-magnitude" viewBox="0 0 {{ charts.magnitude.width }} {{ charts.magnitude.height }}" role="img"
+               aria-label="Gain magnitude in decibels against frequency">
+            {% set chart = charts.magnitude %}
+            {% set chart_x_filter = "hz" %}
+            {% include "_chart_axes.html" %}
+            <polyline fill="none" stroke="#3450b5" stroke-width="2" points="{{ chart.polylines[0] }}"/>
+          </svg>
+        </figure>
+
+        <figure class="chart">
+          <figcaption>Phase (degrees)</figcaption>
+          <svg data-testid="ac-phase" viewBox="0 0 {{ charts.phase.width }} {{ charts.phase.height }}" role="img"
+               aria-label="Output phase in degrees against frequency">
+            {% set chart = charts.phase %}
+            {% set chart_x_filter = "hz" %}
+            {% include "_chart_axes.html" %}
+            <polyline fill="none" stroke="#0f766e" stroke-width="2" points="{{ chart.polylines[0] }}"/>
+          </svg>
+        </figure>
+      </div>
+    </section>
+
+    <section class="card wide" aria-labelledby="tran-title">
+      <h2 id="tran-title">Transient Waveforms</h2>
+      <div class="charts">
+        <figure class="chart">
+          <figcaption>Input v<sub>in</sub> (V)</figcaption>
+          <svg data-testid="tran-input" viewBox="0 0 {{ charts.tran_in.width }} {{ charts.tran_in.height }}" role="img"
+               aria-label="Input voltage against time">
+            {% set chart = charts.tran_in %}
+            {% set chart_x_filter = "duration" %}
+            {% include "_chart_axes.html" %}
+            <polyline fill="none" stroke="#b45309" stroke-width="2" points="{{ chart.polylines[0] }}"/>
+          </svg>
+        </figure>
+
+        <figure class="chart">
+          <figcaption>Output v<sub>out</sub> (V)</figcaption>
+          <svg data-testid="tran-output" viewBox="0 0 {{ charts.tran_out.width }} {{ charts.tran_out.height }}" role="img"
+               aria-label="Output voltage against time">
+            {% set chart = charts.tran_out %}
+            {% set chart_x_filter = "duration" %}
+            {% include "_chart_axes.html" %}
+            <polyline fill="none" stroke="#3450b5" stroke-width="2" points="{{ chart.polylines[0] }}"/>
+          </svg>
+        </figure>
+      </div>
+      <p class="hint">
+        Each waveform has its own vertical scale, so the small input is not
+        drawn flat beside the large output. Five periods are simulated.
+      </p>
+    </section>
+    {% endif %}
+
+    {% if netlist %}
+    <section class="card wide" aria-labelledby="netlist-title">
+      <h2 id="netlist-title">Netlist Actually Run</h2>
+      <pre class="spice-log" data-testid="netlist">{{ netlist }}</pre>
+    </section>
+    {% endif %}
+
+    <footer class="page-footer">
+      <p>
+        SPICE values come from ngspice and are shown as produced. Analytical
+        values come from <code>dc_bias.py</code>. Where the two disagree, both
+        are printed; nothing is averaged.
+      </p>
+      <p>
+        Model limits: ideal NPN (<code>IS=1e-14</code>, <code>BF=β</code>), no
+        Early effect, no junction capacitances. The AC sweep is therefore flat
+        above the coupling-capacitor corners.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

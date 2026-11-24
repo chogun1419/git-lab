@@ -215,3 +215,82 @@ def calculate_bias(mode: str, **values: float) -> dict[str, float | str]:
 - เพิ่มกราฟ load line และจุด Q บนกราฟ (ต้องใช้ JavaScript หรือ SVG)
 - เพิ่มการ export ผลเป็น CSV/PDF
 - เพิ่มการเลือกค่าตัวต้านทานมาตรฐานและการเทียบ β หลายค่า
+
+## 11. Common-Emitter Amplifier v1 (ngspice)
+
+### 11.1 ทำไมต้องเพิ่ม ngspice
+
+`dc_bias.py` ตอบได้แค่ Q-point แบบ DC ถ้าจะตอบว่า "วงจรนี้ขยายสัญญาณได้กี่ dB ที่ความถี่ f"
+และ "รูปคลื่นที่เอาต์พุตเป็นอย่างไร" ต้องแก้สมการดิฟเฟอเรนเชียลของ C และทรานซิสเตอร์
+จึงเลือกใช้ ngspice เป็นเครื่องยนต์จำลองจริง ไม่ใช่คำนวณ gain ขึ้นมาบนหน้าเว็บ
+
+หลักการสำคัญ: **ตัวเลขที่แสดงต้องมาจากการรัน ngspice จริง** ถ้า ngspice ไม่มี, ไม่ converge,
+หรือ timeout หน้าเว็บต้องแจ้ง error และ **ไม่วาดกราฟ** ไม่มีค่า placeholder
+
+### 11.2 โครงสร้างโมดูล (ไม่แตะ `dc_bias.py`)
+
+| ไฟล์ | หน้าที่ | มี I/O? |
+|---|---|---|
+| `dc_bias.py` | สูตร Q-point 3 โหมดเดิม **ไม่แก้ไข** | ไม่มี |
+| `amplifier.py` | สร้าง netlist (string), คำนวณ tstep/tstop, ช่วง AC sweep, ประมาณ gain small-signal | ไม่มี |
+| `spice_runner.py` | หา binary, เขียน netlist ลง temp dir, เรียก subprocess, parse ไฟล์ `wrdata` | มี (เฉพาะโมดูลนี้) |
+| `plots.py` | แปลงชุดตัวเลขเป็นพิกัด SVG polyline | ไม่มี |
+| `app.py` | route, แปลงหน่วย, ประกอบ context ให้ template | route เท่านั้น |
+
+เหตุผลที่แยก `amplifier.py` ออกจาก `dc_bias.py`: `dc_bias.py` ต้อง import ได้โดยไม่พึ่ง Flask
+และไม่มี I/O อยู่แล้ว การใส่ subprocess หรือ netlist ลงไปจะทำให้ unit test ของสูตร DC
+ต้องพึ่งเครื่องที่มี ngspice ซึ่งขัดกับข้อกำหนดเดิม
+
+### 11.3 วงจรอ้างอิง
+
+CE แบบ voltage divider ใช้ค่าองค์ประกอบชุดเดียวกับโหมด Divider ของ Lab 3
+เพิ่ม passives ที่คงที่ (แสดงบนหน้าจอและใน netlist เสมอ):
+
+- `C1 = C2 = 1 µF` (coupling), `CE = 100 µF` (emitter bypass), `RL = 10 kΩ` (load)
+- โมเดลทรานซิสเตอร์: `.model QNPN NPN(IS=1e-14 BF=β)`
+- ไม่มี `VAF` (Early effect) และไม่มี junction capacitance
+  → AC response แบนตั้งแต่เหนือจุด cutoff ของ C ไปจนถึง 100 MHz
+  ซึ่งเป็น **ข้อจำกัดของโมเดล ไม่ใช่พฤติกรรมของวงจรจริง**
+
+### 11.4 การเลือก tstep / tstop
+
+- `tstop = 5 / f` (ดู 5 คาบ)
+- `tstep = (1 / f) / 200` (200 จุดต่อคาบ ≈ 1000 จุดทั้งงาน)
+- เนื่องจาก `f > 0` ถูกตรวจก่อนแล้ว `tstep > 0` เสมอ — หลีกเลี่ยง `.tran 0 ...`
+  ที่ ngspice จะปฏิเสธ
+- AC sweep: `f/100 … f×100` (2 decade สองข้าง) clamp ในช่วง 1 Hz – 100 MHz, 10 จุด/decade
+- ความถี่เกิน 100 MHz ถูกปฏิเสธ เพราะโมเดลไม่มี junction capacitance
+  ค่าที่ได้จะแบนผิดความจริง
+
+### 11.5 Windows: ทำไมใช้ `ngspice_con.exe`
+
+`ngspice.exe` เป็น GUI build ถ้าเรียกผ่าน `subprocess` จะเปิดหน้าต่างค้างและบล็อก request thread
+จึงเลือก `ngspice_con.exe` (console) ก่อนเสมอ และตั้ง `creationflags=CREATE_NO_WINDOW`
+เพื่อไม่ให้หน้าต่าง console กระพริบ
+
+ลำดับการค้นหา binary: `NGSPICE_CON` → `NGSPICE_BIN` → `PATH` → `C:\Users\<user>\Spice64\bin`
+→ `C:\Spice64\bin` → `C:\Program Files\Spice64\bin`
+
+### 11.6 การแยกแหล่งตัวเลข
+
+หน้าเว็บแสดงสองตารางแยกกันและติด `data-source="spice"` / `data-source="analytical"`:
+
+- **SPICE**: จาก `.op`, `.ac`, `.tran` ของ ngspice โดยตรง
+- **Analytical**: จาก `dc_bias.py` (V_BE คงที่ 0.7 V) และ `amplifier.estimate_small_signal`
+  (midband estimate)
+
+ค่าที่ต่างกันจะแสดงทั้งคู่ ไม่เฉลี่ย ไม่ปรับให้ตรงกัน สาเหตุหลักที่ต่างคือ ngspice คำนวณ
+V_BE จากกระแส (≈0.66 V ที่กระแสนี้) ไม่ได้ตรึงที่ 0.7 V
+
+### 11.7 Error path
+
+| กรณี | HTTP | สิ่งที่ผู้ใช้เห็น |
+|---|---|---|
+| อินพุตผิดรูป / ศูนย์ / เกิน V_CC | 400 | ข้อความระบุชื่อฟิลด์ ค่าที่กรอกยังอยู่ |
+| หา `ngspice_con.exe` ไม่เจอ | 503 | บอก path ที่ลองแล้ว + วิธีตั้ง `NGSPICE_CON` |
+| exit code ≠ 0 | 500 | ข้อความ stderr/stdout ของ ngspice แบบดิบ |
+| `singular matrix` / stepping failed | 500 | ข้อความของ ngspice (แม้ exit code = 0) |
+| เกิน 30 วินาที | 504 | บอกเวลา limit |
+| ไม่มีไฟล์ output | 500 | `ngspice produced no data for ...` |
+
+ทุกกรณี error จะไม่แสดงกราฟหรือตัวเลขจำลอง

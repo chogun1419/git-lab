@@ -1,0 +1,1 @@
+  vcc             v(vcc)          v(base)         v(coll)         v(emi)          i(VCC)         

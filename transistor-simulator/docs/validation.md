@@ -214,3 +214,59 @@ V_C = 7.6462 V, V_CE = 5.6475 V → ตรงกัน
 
 สาเหตุที่พบบ่อยที่สุดในงานนี้: เลือกโหมดผิด (R_E ถูกซ่อนในโหมด Fixed) หรือหน่วยเป็น Ω
 แต่ผู้ใช้คิดเป็น kΩ ทำให้ค่าที่ส่งต่างกัน 1000 เท่า
+
+## 13. Common-Emitter Amplifier v1 — ผลรัน ngspice จริง
+
+วันที่รัน: 2026-11-24 · ngspice-47 (`C:\Users\theer\Spice64\bin\ngspice_con.exe`)
+
+วงจรอ้างอิง: V_CC = 12 V, R1 = 100 kΩ, R2 = 22 kΩ, R_C = 2.2 kΩ, R_E = 1 kΩ, β = 100,
+v_in = 10 mV, f = 1 kHz, C1 = C2 = 1 µF, CE = 100 µF, R_L = 10 kΩ
+
+### 13.1 Q-point: analytical vs SPICE
+
+| ปริมาณ | Analytical (`dc_bias.py`) | SPICE (`.op`) | ต่าง |
+|---|---|---|---|
+| V_B | 1.94 V | 1.936 V | −0.2 % |
+| V_E | 1.24 V | 1.275 V | +2.8 % |
+| V_C | 9.29 V | 9.223 V | −0.7 % |
+| V_CE | 8.05 V | 7.948 V | −1.3 % |
+| I(V_CC) | — | −1.363 mA | — |
+
+สาเหตุที่ต่าง: โมเดลใช้ `IS=1e-14` ทำให้ ngspice ได้ V_BE ≈ 0.66 V
+ในขณะที่ `dc_bias.py` ตรึง V_BE = 0.70 V ทั้งคู่ถูกต้องตามสมมติฐานของตัวเอง
+หน้าเว็บจึงแสดงสองตาราง ไม่ปรับให้เท่ากัน
+
+### 13.2 AC และ transient
+
+| ปริมาณ | Analytical estimate | SPICE |
+|---|---|---|
+| Gain ที่ 1 kHz | 38.8 dB (midband, `-(R_C‖R_L)/re'`) | 38.8 dB |
+| Phase ที่ 1 kHz | −180° (กลับเฟส) | −169.9° |
+| Input swing (p-p) | 20.0 mV | 20.0 mV |
+| Output swing (p-p) | 1.74 V (จาก gain) | 1.72 V |
+| จำนวนจุด AC | — | 41 (4 decade × 10) |
+| จำนวนจุด transient | — | 1008 (5 คาบ, 200 จุด/คาบ) |
+
+Phase ไม่ถึง −180° พอดีเพราะ C1/C2 ทำให้เกิด lead ที่ความถี่ต่ำ
+
+### 13.3 Error case ที่ตรวจแล้ว
+
+| เคส | ผลที่ต้องได้ |
+|---|---|
+| `freq_hz` = 500 MHz | HTTP 400 + `freq_hz must not exceed 100 MHz.` ค่ายังอยู่ |
+| `vin_amp_v` = 0 | HTTP 400 + `vin_amp_v must be greater than zero.` |
+| `vin_amp_v` = 20 V (> V_CC) | HTTP 400 + `vin_amp_v must not exceed vcc_v.` |
+| ช่อง amplitude ว่าง | HTTP 400 + `vin_amp_v is required.` |
+| ไม่มี ngspice | HTTP 503 + path ที่ลอง + วิธีตั้ง `NGSPICE_CON` ไม่มีกราฟ |
+| ngspice exit ≠ 0 | HTTP 500 + ข้อความ ngspice ดิบ |
+| timeout 30 s | HTTP 504 |
+| `singular matrix` | HTTP 500 + ข้อความ ngspice |
+
+### 13.4 ตารางตรวจบน Browser
+
+| # | เคส | สิ่งที่เห็น |
+|---|---|---|
+| 1 | ค่าเริ่มต้น กด Run ngspice | SPICE V_B 1.936 V, V_C 9.223 V; gain 38.8 dB; 4 กราฟ |
+| 2 | เปลี่ยน f = 10 kHz | กราฟ AC เลื่อนช่วงไป 100 Hz – 1 MHz, gain ยัง ≈38.8 dB |
+| 3 | เปลี่ยน v_in = 100 mV | Input swing 200 mV, output swing ≈17.2 V (เกินขอบเขตจริง — ตัวเลขมาจาก SPICE) |
+| 4 | f = 500 MHz | error 400 ตามข้อ 13.3 |
