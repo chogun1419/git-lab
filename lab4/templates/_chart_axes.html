@@ -1,0 +1,19 @@
+{# Shared chart frame. Expects `chart` (from plots.build_chart) and `chart_x_filter`. #}
+<g class="chart-frame">
+  <rect x="{{ chart.left }}" y="{{ chart.top }}" width="{{ chart.plot_width }}"
+        height="{{ chart.plot_height }}" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  {% for tick in chart.x_ticks %}
+  <line x1="{{ tick.x }}" y1="{{ chart.top }}" x2="{{ tick.x }}"
+        y2="{{ chart.top + chart.plot_height }}" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="{{ tick.x }}" y="{{ chart.top + chart.plot_height + 16 }}" text-anchor="middle"
+        font-size="10" fill="#475569">
+    {%- if chart_x_filter == "duration" -%}{{ tick.value|duration }}{%- else -%}{{ tick.value|hz }}{%- endif -%}
+  </text>
+  {% endfor %}
+  {% for tick in chart.y_ticks %}
+  <line x1="{{ chart.left }}" y1="{{ tick.y }}" x2="{{ chart.left + chart.plot_width }}"
+        y2="{{ tick.y }}" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="{{ chart.left - 8 }}" y="{{ tick.y + 3 }}" text-anchor="end"
+        font-size="10" fill="#475569">{{ tick.value|tick }}</text>
+  {% endfor %}
+</g>

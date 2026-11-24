@@ -1,0 +1,25 @@
+Transistor DC Bias Simulator - Web URL
+======================================
+
+Local web app (run on this machine)
+-----------------------------------
+  http://127.0.0.1:5000/
+
+  Start the server first:
+    cd transistor-simulator
+    python app.py
+
+  หมายเหตุ: 127.0.0.1 คือ localhost เปิดได้เฉพาะเครื่องที่รันเซิร์ฟเวอร์
+  และใช้ได้เฉพาะขณะที่เซิร์ฟเวอร์ยังทำงานอยู่ (ไม่ใช่ public URL)
+
+GitHub repository
+-----------------
+  https://github.com/chogun1419/git-lab
+
+Project folder in the repository
+--------------------------------
+  https://github.com/chogun1419/git-lab/tree/main/transistor-simulator
+
+Test log
+--------
+  https://github.com/chogun1419/git-lab/blob/main/transistor-simulator/docs/test-log.txt
